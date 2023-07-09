@@ -1,0 +1,69 @@
+model_hparams:
+  activation: relu
+  affine_hidden_layers:
+  - 128
+  - 16
+  affine_layers:
+  - layer_0:
+      in_features: 128
+      out_features: 128
+  - layer_1: ReLU
+  - layer_2: BatchNorm1d
+  - layer_3:
+      in_features: 128
+      out_features: 16
+  - layer_4: ReLU
+  - layer_5: BatchNorm1d
+  apply_sigmoid_in_last_layer: false
+  attentive_fp:
+    dropout: 0.2
+    edge_dim: 12
+    hidden_channels: 200
+    input_features: 96
+    num_layers: 1
+    num_timesteps: 2
+    out_channels: 16
+  batch_normalization: true
+  batch_size: 30
+  category_weights: null
+  checkpoint_metric: val_loss
+  convolutions:
+  - activation: relu
+    conv_type: GATN
+    dropout: 0
+    edge_dim: 0
+    in_features: 96
+    out_channels: 64
+  - activation: relu
+    conv_type: GATN
+    dropout: 0
+    edge_dim: 0
+    in_features: 64
+    out_channels: 128
+  - activation: relu
+    conv_type: GATN
+    dropout: 0
+    edge_dim: 0
+    in_features: 128
+    out_channels: 128
+  dropout: 0
+  early_stopping_min_delta: 0.001
+  early_stopping_patience: 10
+  exp_name: three_layers_retrain
+  fully_connected_manual_layers: null
+  hidden_layers_number: 2
+  learning_rate: 0.01
+  loss_module: BCEWithLogitsLoss
+  max_epochs: 10000
+  model: GCNMultilabel
+  multilabel_tags:
+  - green
+  - bitter
+  - fruity
+  - floral
+  - woody
+  number_of_features_input_layer: 96
+  optimizer: adamW
+  pool_type: add
+  threshold: null
+  weight_decay: 0.1

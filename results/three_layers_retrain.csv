@@ -1,0 +1,5 @@
+exp_number,model,test_loss
+31,GCNMultilabel,1.881280541419983
+53,GCNMultilabel,1.9556351900100708
+105,GCNMultilabel,1.7922215461730957
+143,GCNMultilabel,1.933276891708374

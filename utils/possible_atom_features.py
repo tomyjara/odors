@@ -1,0 +1,113 @@
+from rdkit.Chem.rdchem import HybridizationType as Hyb
+
+possible_bond_types = ['SINGLE', 'DOUBLE', 'TRIPLE', 'AROMATIC']
+
+possible_bond_conjugations = ['True', 'False']
+
+possible_bond_stereos = ['STEREONONE', 'STEREOZ', 'STEREOE', 'STEREOCIS', 'STEREOTRANS', 'STEREOANY', ]
+
+possible_hybridization_list = [Hyb.S, Hyb.SP, Hyb.SP2, Hyb.SP3, Hyb.SP3D]
+
+possible_atom_list = ['Ac',
+                      'Ag',
+                      'Al',
+                      'Ar',
+                      'As',
+                      'Au',
+                      'B',
+                      'Ba',
+                      'Be',
+                      'Bi',
+                      'Br',
+                      'C',
+                      'Ca',
+                      'Cd',
+                      'Cl',
+                      'Co',
+                      'Cr',
+                      'Cs',
+                      'Cu',
+                      'F',
+                      'Fe',
+                      'Ga',
+                      'Gd',
+                      'Ge',
+                      'H',
+                      'He',
+                      'Hg',
+                      'I',
+                      'K',
+                      'Li',
+                      'Mg',
+                      'Mn',
+                      'N',
+                      'Na',
+                      'Nb',
+                      'Ni',
+                      'O',
+                      'P',
+                      'Pb',
+                      'Pd',
+                      'Po',
+                      'Pt',
+                      'Rb',
+                      'Rf',
+                      'Rh',
+                      'Ru',
+                      'S',
+                      'Sb',
+                      'Se',
+                      'Si',
+                      'Sn',
+                      'Sr',
+                      'Tb',
+                      'Tc',
+                      'Ti',
+                      'Tl',
+                      'U',
+                      'V',
+                      'W',
+                      'Y',
+                      'Zn',
+                      'Zr']
+
+possible_atom_list_sweet_bitter = ['Ba',
+                                   'Br',
+                                   'C',
+                                   'Ca',
+                                   'Cl',
+                                   'F',
+                                   'Fe',
+                                   'Hg',
+                                   'I',
+                                   'K',
+                                   'Li',
+                                   'Mg',
+                                   'N',
+                                   'Na',
+                                   'O',
+                                   'P',
+                                   'S',
+                                   'Sr']
+
+possible_atom_list_odor = ['Br',
+                           'C',
+                           'Ca',
+                           'Cl',
+                           'He',
+                           'I',
+                           'K',
+                           'Mg',
+                           'N',
+                           'Na',
+                           'O',
+                           'P',
+                           'S',
+                           'Si',
+                           'Zn']
+
+# usar como thermo?
+possible_formal_charges = [-2, -1, 0, 1, 2, 3, 4]
+
+# usar como thermo?
+possible_num_radical_electrons = [0, 1, 2, 3, 4]

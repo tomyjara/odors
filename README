@@ -1,0 +1,3 @@
+PARA CREAR EL ENVIRONMENT:
+conda env create -n odors --file environment.yml
+
