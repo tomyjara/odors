@@ -1,4 +1,3 @@
-import logging
 from copy import deepcopy
 
 import torch
@@ -9,7 +8,6 @@ import pandas as pd
 import logging
 from modules.datasets_loader import load_sweet_bitter_dataset, load_odor_dataset, load_common_tags_dataset
 from modules.lightning_module import GNNLightning
-from pprint import pprint
 import seaborn as sns
 import pickle
 

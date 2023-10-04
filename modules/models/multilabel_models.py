@@ -3,7 +3,7 @@ from torch import sigmoid
 from torch.nn import Linear, Module
 
 from torch_geometric.nn import GATConv, AttentiveFP
-from torch_geometric.nn import global_add_pool, MessagePassing
+from torch_geometric.nn import global_add_pool, MessagePassing, global_mean_pool
 
 from modules.models.models import build_convolutional_module, build_graph_pool_layer, build_affine_layers
 
@@ -119,7 +119,9 @@ class GCNMultilabel(MutilabelModel):
                 else:
                     x = layer(x, edge_index)
                 if molecule_name:
-                    self.activations[molecule_name[0]][layer] = x.flatten().tolist()
+                    pooled_activations = global_mean_pool(x, data.batch)
+                    self.activations[molecule_name[0]][layer] = pooled_activations.flatten().tolist()
+                    #self.activations[molecule_name[0]][layer] = x.flatten().tolist()
             else:
                 x = layer(x)
 

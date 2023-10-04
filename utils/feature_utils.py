@@ -124,7 +124,7 @@ def mol2graph(mol, label, name='None'):
                 y=label
                 )
     data.name = name
-    print('MOL NAME', name, 'NUMBER OF ATOMS', len(atoms))
+    #print('MOL NAME', name, 'NUMBER OF ATOMS', len(atoms))
 
     return data
 

@@ -10,7 +10,7 @@ from modules.trainer import train_graph_classifier
 
 
 EXP_NAME = 'test'
-NUMBER_OF_EXPERIMENTS = 5
+NUMBER_OF_EXPERIMENTS = 50
 
 if __name__ == '__main__':
     # pl.seed_everything(42)
