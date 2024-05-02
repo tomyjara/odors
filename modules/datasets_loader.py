@@ -7,9 +7,10 @@ import torch
 from sklearn.utils import class_weight
 import numpy as np
 
-from feature_utils import inchisToMols, mol2graph, show_atoms_features
 from random import shuffle
 from prettytable import PrettyTable
+
+from feature_utils import inchisToMols, mol2graph, show_atoms_features
 
 
 def molecules_dataset_to_graph_list(dataset, labels):
@@ -196,6 +197,18 @@ def load_common_tags_dataset(dataset_path='../dataset/common_tags/unbalanced',
 
     return train_mols, validation_mols, test_mols, tag_weights
 
+
+#carga el dataset sin separar en train, test, validataion
+def load_common_tags_dataset_no_split(dataset_path=None,
+                             bypas_intersections=False):
+    # pl.seed_everything(42)
+    train = pd.read_csv(dataset_path).sample(frac=1)
+
+    train_labels = [0 for _ in range(train.shape[0])]
+    train_mols = molecules_dataset_to_graph_list(train, train_labels)
+    train_mols = remove_invalid_mols(train_mols, train_labels)
+
+    return train_mols
 
 def load_common_tags_dataset_nx(sample=1, augment_positives_ratio=0,
                                 dataset_path='../dataset/common_tags/balanced_tags',

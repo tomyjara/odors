@@ -8,8 +8,8 @@ from sklearn.metrics import accuracy_score, recall_score, precision_score, roc_c
 from sklearn.metrics._classification import f1_score
 from torch.nn import BCELoss
 
-from modules.models.models import AttentiveFp, GCN, MLP
-from modules.models.multilabel_models import GCNMultilabel, MLPMultilabel, AttentiveFpMultilabel
+from models.models import AttentiveFp, GCN, MLP
+from models.multilabel_models import GCNMultilabel, MLPMultilabel, AttentiveFpMultilabel
 
 logging.basicConfig(level=logging.INFO)
 class GNNLightning(pl.LightningModule):

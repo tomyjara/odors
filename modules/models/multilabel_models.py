@@ -5,7 +5,7 @@ from torch.nn import Linear, Module
 from torch_geometric.nn import GATConv, AttentiveFP
 from torch_geometric.nn import global_add_pool, MessagePassing, global_mean_pool
 
-from modules.models.models import build_convolutional_module, build_graph_pool_layer, build_affine_layers
+from models.models import build_convolutional_module, build_graph_pool_layer, build_affine_layers
 
 import pickle
 import logging

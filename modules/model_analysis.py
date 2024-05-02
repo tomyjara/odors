@@ -6,7 +6,8 @@ from sklearn.metrics import roc_curve, roc_auc_score, precision_recall_curve, co
 from torch_geometric.data import DataLoader
 import pandas as pd
 import logging
-from modules.datasets_loader import load_sweet_bitter_dataset, load_odor_dataset, load_common_tags_dataset
+from modules.datasets_loader import load_sweet_bitter_dataset, load_odor_dataset, load_common_tags_dataset, \
+    load_common_tags_dataset_no_split
 from modules.lightning_module import GNNLightning
 import seaborn as sns
 import pickle
@@ -101,7 +102,7 @@ def get_multilabel_models_predictions_2_logits(models, test_loader):
     return models_predictions, y
 
 
-def get_multilabel_models_probs_1_logit(models, test_loader, save_activations=False, activations_path=ACTIVATIONS_PATH):
+def get_multilabel_models_probs_1_logit(models, test_loader, save_activations=True, activations_path=ACTIVATIONS_PATH):
     models_predictions = {}
     y = None
     for model_name, model_path in models.items():
@@ -109,9 +110,6 @@ def get_multilabel_models_probs_1_logit(models, test_loader, save_activations=Fa
         classifier.eval()
 
         y = {}
-        pred_probs = []
-        neg_preds = []
-        pos_preds = []
 
         iterator = iter(test_loader)
         molecules_predictions = {}
@@ -119,18 +117,6 @@ def get_multilabel_models_probs_1_logit(models, test_loader, save_activations=Fa
         for molecule in iterator:
             name = molecule.name
             molecules_predictions[name[0]] = {}
-            classes = molecule.y
-
-            for clasx in classes:
-                class_labels = classes[clasx]
-                class_labels = [clazz.item() for clazz in class_labels]
-                if y.get(clasx) is not None:
-                    y[clasx] = y[clasx] + class_labels
-                else:
-                    y[clasx] = class_labels
-            # classes = [clazz.item() for clazz in classes]
-            # y = classes
-
             model_preds = classifier(molecule)
 
             for category in model_preds:
@@ -444,7 +430,7 @@ def plot_scores_distributions_same_plot(model_predictions_, y):
     pyplot.close()
 
 
-GAT_0 = '../experiments/three_layers_retrain/lightning_logs/version_105/checkpoints/epoch=54-step=2145.ckpt'
+GAT_0 = '/Users/tomas/PycharmProjects/odors/experiments/test/lightning_logs/version_1/checkpoints/epoch=33-step=1972.ckpt'
 GAT_1 = '../experiments/three_layers_retrain/lightning_logs/version_31/checkpoints/epoch=15-step=624.ckpt'
 GAT_2 = '../experiments/three_layers_retrain/lightning_logs/version_54/checkpoints/epoch=11-step=468.ckpt'
 GAT_3 = '../experiments/three_layers_retrain/lightning_logs/version_106/checkpoints/epoch=57-step=6786.ckpt'
@@ -457,22 +443,20 @@ GAT_3 = '../experiments/three_layers_retrain/lightning_logs/version_106/checkpoi
 
 tags = ('fruity', 'bitter', 'green', 'floral', 'woody')
 
-train, validation, test, weights = load_common_tags_dataset(tags=tags,
-                                                            dataset_path='../dataset/common_tags/unbalanced',
-                                                            test_set_path='/home/tomas/PycharmProjects/tesis/dataset/common_tags/colaboracion_activaciones/enzo_eric_mols.csv',
-                                                            bypas_intersections=True,
-                                                            show_tags=False)
+molecules = load_common_tags_dataset_no_split(
+    dataset_path='/Users/tomas/PycharmProjects/odors/dataset/common_tags/molecules_inchi.csv',
+    bypas_intersections=True)
 
 batch_size_test = 1
 batch_size_validation = 1
 
-test_loader = DataLoader(test, batch_size=batch_size_test, shuffle=False, drop_last=False)
+test_loader = DataLoader(molecules, batch_size=batch_size_test, shuffle=False, drop_last=False)
 
 models = {
     'GAT_0': GAT_0,
-    #'GAT_1': GAT_1,
-    #'GAT_2': GAT_2,
-    #'GAT_3': GAT_3,
+    # 'GAT_1': GAT_1,
+    # 'GAT_2': GAT_2,
+    # 'GAT_3': GAT_3,
 }
 
 

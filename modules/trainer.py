@@ -6,7 +6,7 @@ from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
 from pytorch_lightning.callbacks.progress import ProgressBar
 
-from modules.lightning_module import GNNLightning
+from lightning_module import GNNLightning
 
 
 def count_parameters(model):

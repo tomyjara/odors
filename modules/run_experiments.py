@@ -3,10 +3,10 @@ import os
 
 from pprint import pprint
 from torch_geometric.loader import DataLoader
-from modules.datasets_loader import load_common_tags_dataset
+from datasets_loader import load_common_tags_dataset
 
-from modules.hyperparams import select_random_hyperparams
-from modules.trainer import train_graph_classifier
+from hyperparams import select_random_hyperparams
+from trainer import train_graph_classifier
 
 
 EXP_NAME = 'test'

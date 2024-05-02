@@ -4,11 +4,7 @@ from torch import sigmoid
 from torch_geometric.nn import GATConv
 from torch_geometric.nn import global_add_pool, MessagePassing
 
-from pprint import pprint
-
-from modules.models.layer_builders import build_convolutional_module, build_graph_pool_layer, build_affine_layers
-
-
+from models.layer_builders import build_convolutional_module, build_graph_pool_layer, build_affine_layers
 
 from torch_geometric.nn.models import AttentiveFP
 
@@ -17,6 +13,8 @@ class Model(torch.nn.Module):
     @staticmethod
     def is_multilabel():
         return False
+
+
 class GCN(Model):
     def __init__(self, hp):
         super(GCN, self).__init__()
