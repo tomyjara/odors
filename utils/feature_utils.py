@@ -3,7 +3,7 @@ import numpy as np
 from rdkit import Chem
 from pprint import pprint
 
-from possible_atom_features import possible_atom_list, possible_bond_types, possible_hybridization_list, \
+from utils.possible_atom_features import possible_atom_list, possible_bond_types, possible_hybridization_list, \
     possible_formal_charges, possible_num_radical_electrons, \
     possible_bond_conjugations, possible_bond_stereos
 

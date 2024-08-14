@@ -1,0 +1,2 @@
+# En este directorio guardamos para cada modelo, el logit correspondiente que generó para cada
+# label con el dataset de moleculas provisto

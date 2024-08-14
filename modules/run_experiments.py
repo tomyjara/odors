@@ -9,8 +9,8 @@ from modules.hyperparams import select_random_hyperparams
 from modules.trainer import train_graph_classifier
 
 
-EXP_NAME = 'test'
-NUMBER_OF_EXPERIMENTS = 50
+EXP_NAME = 'test_same_dimension'
+NUMBER_OF_EXPERIMENTS = 5
 
 if __name__ == '__main__':
     # pl.seed_everything(42)

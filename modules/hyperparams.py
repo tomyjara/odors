@@ -186,12 +186,13 @@ def select_random_hyperparams(exp_name):
             #         'activation': 'relu',
             #     }
             # ],
-            # # THREE LAYERS 64-128-128 CHANNELS
+
+            # # THREE LAYERS 32-64-32 CHANNELS
             [
                 {
                     'conv_type': 'GATN',
                     'in_features': NUMBER_OF_INPUT_FEATURES,
-                    'out_channels': 64,
+                    'out_channels': 128,
                     'edge_dim': 0,
                     'dropout': 0,
                     'activation': 'relu',
@@ -199,7 +200,7 @@ def select_random_hyperparams(exp_name):
 
                 {
                     'conv_type': 'GATN',
-                    'in_features': 64,
+                    'in_features': 128,
                     'out_channels': 128,
                     'edge_dim': 0,
                     'dropout': 0,
@@ -209,90 +210,6 @@ def select_random_hyperparams(exp_name):
                     'conv_type': 'GATN',
                     'in_features': 128,
                     'out_channels': 128,
-                    'edge_dim': 0,
-                    'dropout': 0,
-                    'activation': 'relu',
-                }
-            ],
-            # # THREE LAYERS 64-96-96 CHANNELS
-            [
-                {
-                    'conv_type': 'GATN',
-                    'in_features': NUMBER_OF_INPUT_FEATURES,
-                    'out_channels': 64,
-                    'edge_dim': 0,
-                    'dropout': 0,
-                    'activation': 'relu',
-                },
-
-                {
-                    'conv_type': 'GATN',
-                    'in_features': 64,
-                    'out_channels': 96,
-                    'edge_dim': 0,
-                    'dropout': 0,
-                    'activation': 'relu',
-                },
-                {
-                    'conv_type': 'GATN',
-                    'in_features': 96,
-                    'out_channels': 96,
-                    'edge_dim': 0,
-                    'dropout': 0,
-                    'activation': 'relu',
-                }
-            ],
-            # # THREE LAYERS 64-64-64 CHANNELS
-            [
-                {
-                    'conv_type': 'GATN',
-                    'in_features': NUMBER_OF_INPUT_FEATURES,
-                    'out_channels': 64,
-                    'edge_dim': 0,
-                    'dropout': 0,
-                    'activation': 'relu',
-                },
-
-                {
-                    'conv_type': 'GATN',
-                    'in_features': 64,
-                    'out_channels': 64,
-                    'edge_dim': 0,
-                    'dropout': 0,
-                    'activation': 'relu',
-                },
-                {
-                    'conv_type': 'GATN',
-                    'in_features': 64,
-                    'out_channels': 64,
-                    'edge_dim': 0,
-                    'dropout': 0,
-                    'activation': 'relu',
-                }
-            ],
-            # # THREE LAYERS 32-64-32 CHANNELS
-            [
-                {
-                    'conv_type': 'GATN',
-                    'in_features': NUMBER_OF_INPUT_FEATURES,
-                    'out_channels': 32,
-                    'edge_dim': 0,
-                    'dropout': 0,
-                    'activation': 'relu',
-                },
-
-                {
-                    'conv_type': 'GATN',
-                    'in_features': 32,
-                    'out_channels': 64,
-                    'edge_dim': 0,
-                    'dropout': 0,
-                    'activation': 'relu',
-                },
-                {
-                    'conv_type': 'GATN',
-                    'in_features': 64,
-                    'out_channels': 32,
                     'edge_dim': 0,
                     'dropout': 0,
                     'activation': 'relu',

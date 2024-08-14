@@ -1,3 +1,4 @@
+import datetime
 from copy import deepcopy
 
 import torch
@@ -6,8 +7,8 @@ from sklearn.metrics import roc_curve, roc_auc_score, precision_recall_curve, co
 from torch_geometric.data import DataLoader
 import pandas as pd
 import logging
-from modules.datasets_loader import load_sweet_bitter_dataset, load_odor_dataset, load_common_tags_dataset
-from modules.lightning_module import GNNLightning
+from datasets_loader import load_sweet_bitter_dataset, load_odor_dataset, load_common_tags_dataset
+from lightning_module import GNNLightning
 import seaborn as sns
 import pickle
 
@@ -108,6 +109,9 @@ def get_multilabel_models_probs_1_logit(models, test_loader, save_activations=Fa
         classifier = GNNLightning.load_from_checkpoint(model_path)
         classifier.eval()
 
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        classifier.to(device)
+
         y = {}
         pred_probs = []
         neg_preds = []
@@ -117,6 +121,7 @@ def get_multilabel_models_probs_1_logit(models, test_loader, save_activations=Fa
         molecules_predictions = {}
         preds = {}
         for molecule in iterator:
+            molecule = molecule.to(device)
             name = molecule.name
             molecules_predictions[name[0]] = {}
             classes = molecule.y
@@ -148,6 +153,66 @@ def get_multilabel_models_probs_1_logit(models, test_loader, save_activations=Fa
         models_predictions[model_name] = preds
 
     return models_predictions, y
+
+
+def get_multilabel_logits_by_label(model_name, model_path, test_loader, activations_path=ACTIVATIONS_PATH):
+    logging.info('Sigmoid will be applied to the logits in the analysis')
+    classifier = GNNLightning.load_from_checkpoint(model_path)
+    classifier.eval()
+
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    classifier.to(device)
+
+    iterator = iter(test_loader)
+    molecules_predictions = {}
+    preds = {}
+    for molecule in iterator:
+        molecule = molecule.to(device)
+        name = molecule.name
+        molecules_predictions[name[0]] = {}
+
+        model_preds = classifier(molecule)
+
+        for category in model_preds:
+            category_preds = torch.sigmoid(model_preds[category].squeeze(dim=-1))
+            pred = round(category_preds.item(), 5)
+            molecules_predictions[name[0]][category] = pred
+            if preds.get(category) is not None:
+                preds[category] = torch.cat((preds[category], category_preds), dim=0)
+            else:
+                preds[category] = category_preds
+
+    classifier.save_activations(activations_path + f'/{model_name}')
+    save_model_predictions(molecules_predictions, model_name)
+
+    return molecules_predictions
+
+
+def save_dict_to_csv(data, filename):
+    import csv
+    """
+    Save a dictionary to a CSV file.
+
+    :param data: Dictionary where keys are molecule names and values are dictionaries of category activations.
+    :param filename: Name of the CSV file to save.
+    """
+    if not data:
+        print("The provided data dictionary is empty.")
+        return
+
+    # Get the header from the keys of the first molecule
+    header = ['molecule'] + list(next(iter(data.values())).keys())
+
+    # Prepare rows
+    rows = [[molecule] + [attributes[category] for category in header[1:]] for molecule, attributes in data.items()]
+
+    # Write to CSV
+    with open(filename, 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow(header)  # Write header
+        writer.writerows(rows)  # Write data rows
+
+    print(f"Data has been successfully saved to {filename}.")
 
 
 def save_model_predictions(preds, model_name):
@@ -234,7 +299,7 @@ def plot_roc_multi(models_metrics, y, tags, model_name):
     pyplot.close()
 
 
-def plot_roc_multi_all_models_together(models_metrics, y, tags, model_name):
+def plot_roc_multi_all_models_together_old(models_metrics, y, tags, model_name, save=True):
     ns_probs = [1 for _ in range(len(y[tags[0]]))]
 
     # plot random model
@@ -276,12 +341,94 @@ def plot_roc_multi_all_models_together(models_metrics, y, tags, model_name):
     # pyplot.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=None)
     # pyplot.gcf().set_size_inches(20, 40)
     # pyplot.tight_layout()
+
+    if save:
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f'roc_{model_name}_{timestamp}.png'
+        pyplot.savefig(filename)
     pyplot.show()
-    # pyplot.savefig('roc_' + model_name + '.png')
     pyplot.close()
 
 
-def plot_pr_multi_all_models_together(models_metrics, y, tags, model_name):
+def plot_roc_multi_all_models_together(models_metrics, y, tags, model_name, save=True):
+    ns_probs = [1 for _ in range(len(y[tags[0]]))]
+
+    # plot random model
+    ns_fpr, ns_tpr, _ = roc_curve(y[tags[0]], ns_probs)
+
+    fig, axn = pyplot.subplots(2, 3, figsize=(18, 12), sharex=False, sharey=False, constrained_layout=True)
+    fig.delaxes(axn[1, 2])  # Remove the last subplot to accommodate 5 plots
+
+    fig.suptitle(f'Roc Curves {model_name}')
+
+    for ax, tag in zip(axn.flat, tags):
+        ax.plot(ns_fpr, ns_tpr, linestyle='--', label='No Skill', color='black')
+        color = 1
+        for modell_metrics in models_metrics:
+            model_metrics = models_metrics[modell_metrics]
+            fpr = list(model_metrics[tag]['fpr'])
+            tpr = list(model_metrics[tag]['tpr'])
+            name_auc = [f'{modell_metrics}' + ': ' + str(round(model_metrics[tag]['auc'], 2)) for x in
+                        range(len(model_metrics[tag]['tpr']))]
+
+            roc = pd.DataFrame.from_dict({'FPR': (fpr), 'TPR': (tpr), '': name_auc})
+
+            sns.set_style("whitegrid")
+            sns.lineplot(data=roc, x="FPR", y="TPR", hue='', ax=ax,
+                         palette=sns.color_palette('bright')[color - 1:color])
+            color += 1
+
+        ax.set_title(tag.capitalize())
+        ax.grid(True)
+        ax.legend(loc='lower right', title='AUC')
+        ax.get_legend().get_title().set_fontsize('12')
+
+    if save:
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f'../results/roc-pr/roc_{model_name}_{timestamp}.png'
+        pyplot.savefig(filename)
+    pyplot.show()
+    pyplot.close()
+
+
+def plot_pr_multi_all_models_together(models_metrics, y, tags, model_name, save=True):
+    ns_probs = [1 for _ in range(len(y[tags[0]]))]
+
+    fig, axn = pyplot.subplots(2, 3, figsize=(18, 12), sharex=False, sharey=False, constrained_layout=True)
+    fig.delaxes(axn[1, 2])  # Remove the last subplot to accommodate 5 plots
+
+    fig.suptitle(f'Precision-Recall Curves {model_name}')
+
+    for ax, tag in zip(axn.flat, tags):
+        color = 1
+        for modell_metrics in models_metrics:
+            model_metrics = models_metrics[modell_metrics]
+            precision = list(model_metrics[tag]['precision'])
+            recall = list(model_metrics[tag]['recall'])
+
+            prc = pd.DataFrame.from_dict({'Recall': recall,
+                                          'Precision': precision,
+                                          '': [modell_metrics for x in range(len(model_metrics[tag]['precision']))]})
+
+            sns.set_style("whitegrid")
+            sns.lineplot(data=prc, x="Recall", y="Precision", hue='', ax=ax,
+                         palette=sns.color_palette('bright')[color - 1:color])
+            color += 1
+
+        ax.set_title(tag.capitalize())
+        ax.grid(True)
+        ax.legend(loc='lower right')
+
+    if save:
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f'../results/roc-pr/pr_{model_name}_{timestamp}.png'
+        pyplot.savefig(filename)
+
+    pyplot.show()
+    pyplot.close()
+
+
+def plot_pr_multi_all_models_together_old(models_metrics, y, tags, model_name):
     ns_probs = [1 for _ in range(len(y[tags[0]]))]
 
     # plot random model
@@ -444,39 +591,7 @@ def plot_scores_distributions_same_plot(model_predictions_, y):
     pyplot.close()
 
 
-GAT_0 = '../experiments/three_layers_retrain/lightning_logs/version_105/checkpoints/epoch=54-step=2145.ckpt'
-GAT_1 = '../experiments/three_layers_retrain/lightning_logs/version_31/checkpoints/epoch=15-step=624.ckpt'
-GAT_2 = '../experiments/three_layers_retrain/lightning_logs/version_54/checkpoints/epoch=11-step=468.ckpt'
-GAT_3 = '../experiments/three_layers_retrain/lightning_logs/version_106/checkpoints/epoch=57-step=6786.ckpt'
-
-# despues es menor test lost
-# GCN = '../experiments/common_tags_balanced_4/lightning_logs/version_131/checkpoints/epoch=59-step=1919.ckpt'
-# MLP = '../experiments/common_tags_balanced_4/lightning_logs/version_68/checkpoints/epoch=14-step=959.ckpt'
-# ATTENTIVE = '../experiments/common_tags_balanced_4/lightning_logs/version_117/checkpoints/epoch=71-step=1511.ckpt'
-
-
-tags = ('fruity', 'bitter', 'green', 'floral', 'woody')
-
-train, validation, test, weights = load_common_tags_dataset(tags=tags,
-                                                            dataset_path='../dataset/common_tags/unbalanced',
-                                                            test_set_path='/home/tomas/PycharmProjects/tesis/dataset/common_tags/colaboracion_activaciones/enzo_eric_mols.csv',
-                                                            bypas_intersections=True,
-                                                            show_tags=False)
-
-batch_size_test = 1
-batch_size_validation = 1
-
-test_loader = DataLoader(test, batch_size=batch_size_test, shuffle=False, drop_last=False)
-
-models = {
-    'GAT_0': GAT_0,
-    #'GAT_1': GAT_1,
-    #'GAT_2': GAT_2,
-    #'GAT_3': GAT_3,
-}
-
-
-def multilabel_metrics(models, models_predictions):
+def multilabel_metrics(models, models_predictions, tags=('fruity', 'bitter', 'green', 'floral', 'woody'), y=None):
     model_metrics = {}
     for model in models:
         model_metrics[model] = {}
@@ -499,11 +614,60 @@ def multilabel_metrics(models, models_predictions):
     return model_metrics
 
 
-models_predictions, y = get_multilabel_models_probs_1_logit(models, test_loader, SAVE_ACTIVATIONS)
+def save_roc_pr_images_for_models(models, test_loader, tags):
+    models_predictions, y = get_multilabel_models_probs_1_logit(models, test_loader, SAVE_ACTIVATIONS)
+    model_metrics = multilabel_metrics(models, models_predictions, y=y)
+    plot_roc_multi_all_models_together(model_metrics, y, tags, model_name='', save=True)
+    plot_pr_multi_all_models_together(model_metrics, y, tags, model_name='', save=True)
 
-# model_metrics = multilabel_metrics(models, models_predictions)
-# plot_roc_multi_all_models_together(model_metrics, y, tags, model_name='')
-# plot_pr_multi_all_models_together(model_metrics, y, tags, model_name='')
+
+def save_labels_logits(models, test_loader):
+    for model_name, model in models.items():
+        models_predictions = get_multilabel_logits_by_label(model_name, model, test_loader)
+        save_dict_to_csv(models_predictions, '../results/label-logits/' + model_name + '_label_logits' + '.csv')
+        for x, v in models_predictions.items():
+            print(x, v)
 
 
-# models_predictions_val, y_val = get_multilabel_models_probs_1_logit(models, validation_loader)
+if __name__ == '__main__':
+    GAT_0 = '/home/tomas/PycharmProjects/odors/experiments/three_layers_retrain/lightning_logs/version_105/checkpoints/epoch=54-step=2145.ckpt'
+    GAT_1 = '/home/tomas/PycharmProjects/odors/experiments/three_layers_retrain/lightning_logs/version_143/checkpoints/epoch=21-step=858.ckpt'
+    GAT_2 = '/home/tomas/PycharmProjects/odors/experiments/three_layers_retrain/lightning_logs/version_53/checkpoints/epoch=45-step=1794.ckpt'
+    GAT_3 = '/home/tomas/PycharmProjects/odors/experiments/three_layers_retrain/lightning_logs/version_31/checkpoints/epoch=15-step=624.ckpt'
+
+    # despues es menor test lost
+    # GCN = '../experiments/common_tags_balanced_4/lightning_logs/version_131/checkpoints/epoch=59-step=1919.ckpt'
+    # MLP = '../experiments/common_tags_balanced_4/lightning_logs/version_68/checkpoints/epoch=14-step=959.ckpt'
+    # ATTENTIVE = '../experiments/common_tags_balanced_4/lightning_logs/version_117/checkpoints/epoch=71-step=1511.ckpt'
+
+    tags = ('fruity', 'bitter', 'green', 'floral', 'woody')
+
+    # train, validation, test, weights = load_common_tags_dataset(tags=tags,
+    #                                                            dataset_path='../dataset/common_tags/unbalanced',
+    #                                                            test_set_path='/home/tomas/PycharmProjects/tesis/dataset/common_tags/colaboracion_activaciones/enzo_eric_mols.csv',
+    #                                                            bypas_intersections=True,
+    #                                                            show_tags=False)
+
+    multilabel_tags = ['green', 'bitter', 'fruity', 'floral', 'woody']
+    train, validation, test, weights = load_common_tags_dataset(tags=multilabel_tags,
+                                                                dataset_path='../dataset/common_tags/unbalanced')
+
+    batch_size_test = 1
+    batch_size_validation = 1
+
+    test_loader = DataLoader(test, batch_size=batch_size_test, shuffle=False, drop_last=False)
+
+    models = {
+        'GAT_0': GAT_0,
+        'GAT_1': GAT_1,
+        'GAT_2': GAT_2,
+        'GAT_3': GAT_3,
+    }
+
+    models_predictions, y = get_multilabel_models_probs_1_logit(models, test_loader, SAVE_ACTIVATIONS)
+
+    model_metrics = multilabel_metrics(models, models_predictions, y)
+    plot_roc_multi_all_models_together(model_metrics, y, tags, model_name='', save=True)
+    plot_pr_multi_all_models_together(model_metrics, y, tags, model_name='', save=True)
+
+    # models_predictions_val, y_val = get_multilabel_models_probs_1_logit(models, validation_loader)

@@ -7,9 +7,23 @@ import torch
 from sklearn.utils import class_weight
 import numpy as np
 
-from feature_utils import inchisToMols, mol2graph, show_atoms_features
+# from feature_utils import inchisToMols, mol2graph, show_atoms_features
 from random import shuffle
 from prettytable import PrettyTable
+
+from utils.feature_utils import inchisToMols, mol2graph, show_atoms_features
+
+
+# carga el dataset sin separar en train, test, validataion
+def load_common_tags_dataset_no_split(dataset_path=None):
+    # pl.seed_everything(42)
+    train = pd.read_csv(dataset_path).sample(frac=1)
+
+    train_labels = [0 for _ in range(train.shape[0])]
+    train_mols = molecules_dataset_to_graph_list(train, train_labels)
+    train_mols = remove_invalid_mols(train_mols, train_labels)
+
+    return train_mols
 
 
 def molecules_dataset_to_graph_list(dataset, labels):
@@ -265,8 +279,8 @@ def show_tags_neg_pos(tags, test, test_mols, train, train_mols, validation, vali
     table = PrettyTable(["Tag", "Pos", "Neg"])
     table.title = 'Test Counts'
     for tag in tags:
-        #pos = test[tag].value_counts()[1]
-        #neg = test[tag].value_counts()[0]
+        # pos = test[tag].value_counts()[1]
+        # neg = test[tag].value_counts()[0]
         table.add_row([tag, test[tag].value_counts()[1], test[tag].value_counts()[0]])
     print(table)
     table = PrettyTable(["Tag", "Pos", "Neg"])
@@ -469,7 +483,8 @@ def load_sulfur_floral_dataset(class_0='bitter', class_1='sulfur', sample_class_
     return train, validation, test
 
 
-def load_sulfur_floral_dataset_nx(class_0='sweet_and_something_else', class_1='bitter', sample_class_0=None, sample_class_1=None):
+def load_sulfur_floral_dataset_nx(class_0='sweet_and_something_else', class_1='bitter', sample_class_0=None,
+                                  sample_class_1=None):
     # pl.seed_everything(42)
 
     with open(f'../dataset/sulfur_floral/{class_0}.p', 'rb') as f:
@@ -505,16 +520,16 @@ def load_sulfur_floral_dataset_nx(class_0='sweet_and_something_else', class_1='b
     y_1 = class_1_nx['class'].to_numpy()
     labels_1 = [torch.tensor([label], dtype=torch.long) for label in y_1]
     mols_1 = molecules_dataset_to_graph_list_nx(dataset_1_mols, labels_1)
-    #dataset = pd.concat([class_0_nx, class_1_nx])
-    #dataset_mols = list(dataset['graph'])
+    # dataset = pd.concat([class_0_nx, class_1_nx])
+    # dataset_mols = list(dataset['graph'])
 
-    #y = dataset['class'].to_numpy()
-    #labels = [torch.tensor([label], dtype=torch.long) for label in y]
+    # y = dataset['class'].to_numpy()
+    # labels = [torch.tensor([label], dtype=torch.long) for label in y]
 
-    #mols = molecules_dataset_to_graph_list_nx(dataset_mols, labels)
+    # mols = molecules_dataset_to_graph_list_nx(dataset_mols, labels)
 
     # ACA YA SON OBJETOS TIPO "DATA"
-   #mols = remove_invalid_mols_nx(mols, y)
+    # mols = remove_invalid_mols_nx(mols, y)
 
     len1 = len(mols_0)
     len2 = len(mols_1)

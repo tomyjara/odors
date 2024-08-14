@@ -22,6 +22,10 @@ class MutilabelModel(Module):
 
         self.apply_sigmoid_in_last_layer = hp['apply_sigmoid_in_last_layer'] if hp.get(
             'apply_sigmoid_in_last_layer') is not None else False
+        if self.apply_sigmoid_in_last_layer:
+            logging.info('Applying sigmoid in last layer')
+        else:
+            logging.info('Sigmoid not applied in last layer of the model')
         #self.save_convolutions_activations = hp.get('save_conv_activations', False)
         self.activations = {}
 
@@ -43,11 +47,11 @@ class MutilabelModel(Module):
 
     def build_multilabel_output(self, x):
         result = {}
-
         # apply last layer for each tag
         for tag in self.labels:
             prediction = self.__getattr__(tag)(x)
             if self.apply_sigmoid_in_last_layer:
+                logging.info('Applying sigmoid in last layer')
                 result[tag] = sigmoid(prediction)
             else:
                 result[tag] = prediction
@@ -111,7 +115,12 @@ class GCNMultilabel(MutilabelModel):
     def forward(self, data):
         x, edge_index, edge_attributes, molecule_name = data.x, data.edge_index, data.edge_attr, data.name
         if molecule_name:
-            self.activations[molecule_name[0]] = {}
+            # si es un batch separamos y si es una sola molecula usamos directo el string
+            if isinstance(molecule_name, list):
+                for name in molecule_name:
+                    self.activations[name] = {}
+            else:
+                self.activations[molecule_name] = {}
         for layer in self.convs:
             if isinstance(layer, MessagePassing):
                 if isinstance(layer, GATConv) and layer.edge_dim is not None:
@@ -119,9 +128,13 @@ class GCNMultilabel(MutilabelModel):
                 else:
                     x = layer(x, edge_index)
                 if molecule_name:
-                    pooled_activations = global_mean_pool(x, data.batch)
-                    self.activations[molecule_name[0]][layer] = pooled_activations.flatten().tolist()
-                    #self.activations[molecule_name[0]][layer] = x.flatten().tolist()
+                    if isinstance(molecule_name, list):
+                        pooled_activations = global_mean_pool(x, data.batch)
+                        for idx, name in enumerate(molecule_name):
+                            self.activations[name][layer] = pooled_activations[idx].flatten().tolist()
+                    else:
+                        pooled_activations = global_mean_pool(x, data.batch)
+                        self.activations[molecule_name][layer] = pooled_activations.flatten().tolist()
             else:
                 x = layer(x)
 

@@ -13,5 +13,9 @@ with open(PREDS_PATH, "rb") as handle:
 vanilin_activations = activations['Vanillin']
 acetophenone_activations = activations['Acetophenone']
 
-for key, value in preds.items():
+print('Activations:')
+for key, value in activations.items():
     print(key, value)
+
+#for key, value in preds.items():
+#    print(key, value)
